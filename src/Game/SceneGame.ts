@@ -1,5 +1,4 @@
 import 'phaser';
-import { Tilemaps } from 'phaser';
 import { Button } from '../button.js';
 import { game, config, UIHeight, UIlessScaleY, Pspeed } from '../config.js';
 
@@ -14,9 +13,7 @@ class Paddle
     ) {}
     
     set y(_y: number) {
-        console.log(_y);
         this.image.y = _y;
-        console.log(this.image.y);
     }
 
     get y() {
@@ -39,7 +36,7 @@ export class SceneGame extends Phaser.Scene
     Lpaddle: Paddle;
     Rpaddle: Paddle;
     constructor() {
-        super({key: 'play'});
+        super({key: 'SceneGame'});
         this.play = new Button(this, config.width / 4 * 0.5, UIHeight / 2, 'button', 'buttonover', 'Play', placeholder);
     }
 

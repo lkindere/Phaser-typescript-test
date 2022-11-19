@@ -1,6 +1,7 @@
 import 'phaser';
 import { SceneUI } from './UI/SceneUI.js';
 import { SceneGame } from './Game/SceneGame.js';
+import { SceneHistory } from './History/SceneHistory.js';
 
 //Positions and scales
 export const UIHeight = 100;
@@ -24,7 +25,7 @@ export const config = {
         arcade: {
             fps: 60 }
     },
-    scene: [ SceneUI, SceneGame ]
+    scene: [ SceneGame, SceneHistory, SceneUI ]
 };
 
 export var game = new Phaser.Game(config);
