@@ -43,9 +43,11 @@ export class SceneGame extends Phaser.Scene
     preload() {
         this.load.image('paddle', 'assets/paddle.png');
         this.load.image('gamebg', 'assets/gamebackground.png');
+        this.load.glsl('liquidvoid', 'assets/shaders/liquidvoid.frag');
     }
     
     create() {
+        this.add.shader('liquidvoid', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
         let gamebg = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'gamebg');
         gamebg.setScale(UIlessScaleY, UIlessScaleY);
         let scaledwidth = gamebg.width * gamebg.scale;
