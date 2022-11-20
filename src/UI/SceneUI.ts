@@ -54,11 +54,11 @@ export class SceneUI extends Phaser.Scene
         this.load.image('button', 'assets/button.png');
         this.load.image('buttonover', 'assets/buttonover.png');
         this.load.image('backgroundui', 'assets/backgroundui.png');
-        this.load.glsl('lines', 'assets/shaders/lines.frag');
+        this.load.glsl('redwaves', 'assets/shaders/redwaves.frag');
     }
     
     create() {
-        this.add.shader('lines', config.width / 2, (UIHeight - 10) / 2, config.width, UIHeight - 10);
+        this.add.shader('redwaves', config.width / 2, (UIHeight - 10) / 2, config.width, UIHeight - 10);
         this.add.rectangle(config.width / 2, UIHeight - 5, config.width, 10, 0x000000);
         // var background = this.add.image(config.width / 2, UIHeight / 2, 'backgroundui');
         // background.setScale(scaleX, UIHeight / background.height);

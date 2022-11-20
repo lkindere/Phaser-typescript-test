@@ -31,4 +31,13 @@ export const config = {
     scene: [ SceneHome, SceneRoom, SceneGame, SceneHistory, SceneSettings, SceneUI ]
 };
 
+export var options = [
+    { str: 'shaders', on: true },
+    { str: 'something', on: false },
+    { str: 'lol', on: false },
+    { str: 'whatever', on: false },
+    { str: 'very long option wtf is this', on: true },
+    { str: '123', on: true },
+]
+
 export var game = new Phaser.Game(config);

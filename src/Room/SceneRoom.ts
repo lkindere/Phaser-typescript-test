@@ -1,6 +1,6 @@
 import 'phaser';
 import { Button } from '../button.js';
-import { game, config, UIHeight, UIlessScaleY, Pspeed } from '../config.js';
+import { game, config, scaleX, scaleY } from '../config.js';
 
 export class SceneRoom extends Phaser.Scene
 {

@@ -71,8 +71,8 @@ export class SceneHistory extends Phaser.Scene
         for (let i = 0; i < nmatches; ++i) {
             var matchdata = new MatchData('bob', 'peter', 5, 10);
             var img = this.add.image(config.width / 2, config.height / 2 - UIHeight / 2, 'bar');
-            img.setScale(scaleX - 0.01, 1 - 0.01);
-            img.setY(UIHeight + img.height / 2 + img.height * i);
+            img.setScale(scaleX - 0.05, 1);
+            img.setY(UIHeight + img.height / 2 + img.height * 1.1 * (i + 0.1));
             var bar = new HistoryBar(this, matchdata, img);
             this.matches.push(bar);
         }
