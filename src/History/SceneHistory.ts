@@ -1,6 +1,7 @@
 import 'phaser';
-import { style32, getOption, config} from '../config.js';
-import { rescaleobject, UIHeight, scaleX, UIlessScaleY } from '../scale.js';
+import { getOption } from '../options.js';
+import { fwidth, fheight, rescaleobject, UIHeight, scaleX, scaleY, UIlessScaleY, baseX, baseY } from '../scale.js';
+import { style32 } from '../styles.js';
 
 let nmatches = 10;
 let scrolloffset = 0;
@@ -32,11 +33,16 @@ class HistoryBar
         this.textmid = scene.add.text(image.x, image.y, ' : ', style32).setScale(scaleX, UIlessScaleY).setOrigin(0.5);
         this.textp1 = scene.add.text(image.x, image.y, data.p1 + ' ' + data.p1score, style32).setScale(scaleX, UIlessScaleY).setOrigin(0.5);
         this.textp2 = scene.add.text(image.x, image.y, data.p2score + ' ' + data.p2, style32).setScale(scaleX, UIlessScaleY).setOrigin(0.5);
-
+        
         var imagethird = this.image.displayWidth / 3;
         this.textp1.setX(this.image.getLeftCenter().x + imagethird * 0.5).setDepth(10);
         this.textmid.setX(this.image.getLeftCenter().x + imagethird * 1.5).setDepth(10);
         this.textp2.setX(this.image.getLeftCenter().x + imagethird * 2.5).setDepth(10);
+
+        this.image.setDepth(1);
+        this.textmid.setDepth(2);
+        this.textp1.setDepth(2);
+        this.textp2.setDepth(2);
     }
 
     loop() {
@@ -68,12 +74,12 @@ export class SceneHistory extends Phaser.Scene
     
     create() {
         if (getOption('History shader') == true)
-            this.shader = this.add.shader('waves', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
+            this.shader = this.add.shader('waves', fwidth / 2, fheight / 2 + UIHeight / 2, fwidth, fheight - UIHeight)
         //Placeholder until actual data can be acquired
-        let hfifth = (config.height - UIHeight) / 5;
+        let hfifth = (fheight - UIHeight) / 5;
         for (let i = 0; i < nmatches; ++i) {
             var matchdata = new MatchData('some dude', 'another dude', 5, 10);
-            var img = this.add.image(config.width / 2, UIHeight + hfifth * i, 'bar').setScale(scaleX - 0.05, UIlessScaleY - 0.15);
+            var img = this.add.image(fwidth / 2, UIHeight + hfifth * i, 'bar').setScale(scaleX - 0.05, UIlessScaleY - 0.15);
             this.matches.push(new HistoryBar(this, matchdata, img));
         }
     }
@@ -89,8 +95,8 @@ export class SceneHistory extends Phaser.Scene
     scroll(pointer: Phaser.Input.Pointer, dx: number, dy: number, dz: number) {
         scrolloffset += dz * 0.1;
         let lastmatch = this.matches[this.matches.length - 1];
-        if (lastmatch && scrolloffset > lastmatch.initialY - config.height / 1.2)
-            scrolloffset = lastmatch.initialY - config.height / 1.2;
+        if (lastmatch && scrolloffset > lastmatch.initialY - fheight / 1.2)
+            scrolloffset = lastmatch.initialY - fheight / 1.2;
         if (scrolloffset < 0)
             scrolloffset = 0;
         this.reposition = true;
@@ -103,7 +109,10 @@ export class SceneHistory extends Phaser.Scene
     }
 
     rescale() {
-        rescaleobject(this.shader, scaleX, UIlessScaleY, true);
+        if (this.shader) {
+            this.shader.destroy();
+            this.shader = this.add.shader('waves', fwidth / 2, fheight / 2 + UIHeight / 2, fwidth, fheight - UIHeight);
+        }
         for (let match of this.matches)
             match.rescale();
     }

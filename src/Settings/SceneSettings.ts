@@ -1,6 +1,7 @@
 import 'phaser';
-import { style, getOption, options, config } from '../config.js';
-import { scaleX, UIlessScaleY, UIHeight, rescaleobject } from '../scale.js';
+import { getOption, options } from '../options.js';
+import { fwidth, fheight, scaleX, UIlessScaleY, UIHeight, rescaleobject, baseX, baseY, scaleY } from '../scale.js';
+import { style12 } from '../styles.js';
 
 class OptionBox
 {
@@ -11,13 +12,16 @@ class OptionBox
         private box: Phaser.GameObjects.Image,
         private tick: Phaser.GameObjects.Image
     ) {
-        this.text = scene.add.text(box.x - (box.displayWidth / 2 + 5), box.y, option.str, style).setScale(scaleX, UIlessScaleY).setOrigin(1, 0.5);
+        this.text = scene.add.text(box.x - (box.displayWidth / 2 + 5), box.y, option.str, style12).setScale(scaleX, UIlessScaleY).setOrigin(1, 0.5);
         (this.option.on == true) ? this.tick.visible = true : this.tick.visible = false;
+        this.box.setDepth(1);
+        this.tick.setDepth(2);
+        this.text.setDepth(3);
     }
 
     loop(pointer: Phaser.Input.Pointer) {
-        if (pointer.x <= this.box.x + this.box.width / 2 && pointer.x >= this.box.x - this.box.width / 2
-            && pointer.y <= this.box.y + this.box.height / 2 && pointer.y >= this.box.y - this.box.height / 2)
+        if (pointer.x <= this.box.x + this.box.displayWidth / 2 && pointer.x >= this.box.x - this.box.displayWidth / 2
+            && pointer.y <= this.box.y + this.box.displayHeight / 2 && pointer.y >= this.box.y - this.box.displayHeight / 2)
                 this.option.on = !this.option.on;
         (this.option.on == true) ? this.tick.visible = true : this.tick.visible = false;
     }
@@ -44,17 +48,13 @@ export class SceneSettings extends Phaser.Scene
     }
     
     create() {
-        this.shader = this.add.shader('lava', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
-        let wfourth = config.width / 4;
-        let htenth =  (config.height - UIHeight) / 10;
+        this.shader = this.add.shader('lava', fwidth / 2, fheight / 2 + UIHeight / 2, fwidth, fheight - UIHeight);
+        let wfourth = fwidth / 4;
+        let htenth =  (fheight - UIHeight) / 10;
         let i = 0;
         for (let option of options) {
-            let box = this.add.image(wfourth * (i % 3 + 1), UIHeight + htenth * (Math.floor(i / 3) + 1), 'box');
-            let tick = this.add.image(wfourth * (i % 3 + 1), UIHeight + htenth * (Math.floor(i / 3) + 1), 'tick');
-            box.setDepth(1);
-            tick.setDepth(1);
-            box.setScale(scaleX, UIlessScaleY);
-            tick.setScale(scaleX, UIlessScaleY);
+            let box = this.add.image(wfourth * (i % 3 + 1), UIHeight + htenth * (Math.floor(i / 3) + 1), 'box').setScale(scaleX, UIlessScaleY);
+            let tick = this.add.image(wfourth * (i % 3 + 1), UIHeight + htenth * (Math.floor(i / 3) + 1), 'tick').setScale(scaleX, UIlessScaleY);
             this.boxes.push(new OptionBox(option, this, box, tick));
             ++i;
         }
@@ -85,7 +85,10 @@ export class SceneSettings extends Phaser.Scene
     }
 
     rescale () {
-        rescaleobject(this.shader, scaleX, UIlessScaleY, true);
+        if (this.shader) {
+            this.shader.destroy();
+            this.shader = this.add.shader('lava', fwidth / 2, fheight / 2 + UIHeight / 2, fwidth, fheight - UIHeight);
+        }
         rescaleobject(this.background, scaleX, UIlessScaleY, true);
         for (let box of this.boxes) {
             box.rescale();

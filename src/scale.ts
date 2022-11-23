@@ -3,62 +3,69 @@ import { SceneHome } from './Home/SceneHome.js';
 import { SceneHistory } from './History/SceneHistory.js';
 import { SceneSettings } from './Settings/SceneSettings.js';
 import { SceneUI } from './UI/SceneUI.js';
-import { game, config } from './config.js';
+import { config, game } from './config.js';
 
 //Positions and scales
 export const UIHeight = 100;
 export const baseX = 1280;
 export const baseY = 720;
-export let scaleX = window.innerWidth / baseX;
-export let scaleY = window.innerHeight / baseY;
-export let UIlessScaleY = (window.innerHeight - UIHeight) / baseY;
+export let fwidth = window.innerWidth;
+export let fheight = window.innerHeight;
+export let scaleX = fwidth / baseX;
+export let scaleY = fheight / baseY;
+export let UIlessScaleY = (fheight - UIHeight) / baseY;
+
+//Player defauls, move somewhere else later when things are clearer
+export const Pspeed = baseY / 500;
+export const Pheight = baseY / 10;
 
 //Last resolution + reset
 export let lastWidth = window.innerWidth;
 export let lastHeight = window.innerHeight;
 
 function resetLast() {
-    lastWidth = config.width;
-    lastHeight = config.height;
+    lastWidth = fwidth;
+    lastHeight = fheight;
 }
 
 //Functions
 export function rescaleobject(
     image: Phaser.GameObjects.Image
-        | Phaser.GameObjects.Shader
         | Phaser.GameObjects.Text
         | Phaser.GameObjects.Rectangle
         | undefined,
     sclX: number, sclY: number, UIless: boolean = false,
     anchorX: boolean = false, anchorY: boolean = false)
 {
-    console.log("UIless: ", UIless);
     if (image == undefined)
         return;
     if (!anchorX) {
         let posX = image.x / lastWidth;
-        image.setX(config.width * posX);
+        image.setX(fwidth * posX);
     }
     if (!anchorY) {
         if (UIless) {
             let posY = (image.y - UIHeight) / (lastHeight - UIHeight);
-            image.setY(((config.height - UIHeight) * posY) + UIHeight);
+            image.setY(((fheight - UIHeight) * posY) + UIHeight);
         }
         else {
             let posY = image.y / lastHeight;
-            image.setY(config.height * posY);
+            image.setY(fheight * posY);
         }
     }
     image.setScale(sclX, sclY);
 }
 
+//Updates position and scale variables, calls each scene for rescale
 export function rescale() {
-    scaleX = window.innerWidth / baseX;
-    scaleY = window.innerHeight / baseY;
-    UIlessScaleY = (window.innerHeight - UIHeight) / baseY;
+    fwidth = window.innerWidth;
+    fheight = window.innerHeight;
+    scaleX = fwidth / baseX;
+    scaleY = fheight/ baseY;
+    UIlessScaleY = (fheight - UIHeight) / baseY;
 
-    config.width = window.innerWidth;
-    config.height = window.innerHeight;
+    config.width = fwidth;
+    config.height = fheight;
 
     if (game.scene.isActive('SceneUI'))
         (game.scene.getScene('SceneUI') as SceneUI).rescale();

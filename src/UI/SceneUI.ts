@@ -1,46 +1,24 @@
 import 'phaser';
-import { Button } from '../button.js';
-import { style32, getOption, game, config } from '../config.js';
-import { rescaleobject, scaleX, UIHeight } from '../scale.js';
+import { Button } from './button.js';
+import { game } from '../config.js';
+import { getOption, scenes } from '../options.js';;
+import { fwidth, rescaleobject, scaleX, UIHeight, baseX } from '../scale.js';
+import { style32 } from '../styles.js';
 
-function test() {
-    console.log('test successful');
+function setScene(scn: string) {
+    game.scene.start(scn);
+    for (let scene of scenes) {
+        if (scn != scene.str && scene.alwayson == false)
+            game.scene.stop(scene.str);
+    }
 }
 
-function setHome() {
-    game.scene.start('SceneHome');
-    game.scene.stop('SceneGame');
-    game.scene.stop('SceneHistory');
-    game.scene.stop('SceneSettings');
-}
-
-function setGame() {
-    game.scene.start('SceneGame');
-    game.scene.stop('SceneHome');
-    game.scene.stop('SceneHistory');
-    game.scene.stop('SceneSettings');
-}
-
-function setHistory() {
-    game.scene.start('SceneHistory');
-    game.scene.stop('SceneHome');
-    game.scene.stop('SceneGame');
-    game.scene.stop('SceneSettings');
-}
-
-function setSettings() {
-    game.scene.start('SceneSettings');
-    game.scene.stop('SceneHome');
-    game.scene.stop('SceneGame');
-    game.scene.stop('SceneHistory');
-}
-
-let buttons = [
-    { str: 'Home', fn: setHome },
-    { str: 'Play', fn: setGame },
-    { str: 'History', fn: setHistory },
-    { str: 'Chat', fn: test },
-    { str: 'Settings', fn: setSettings },
+let buttondata = [
+    { str: 'Home', fn: setScene, fnparam: 'SceneHome' },
+    { str: 'Play', fn: setScene, fnparam: 'SceneGame' },
+    { str: 'History', fn: setScene, fnparam: 'SceneHistory' },
+    { str: 'Chat', fn: setScene, fnparam: 'SceneChat' },
+    { str: 'Settings', fn: setScene, fnparam: 'SceneSettings' },
 ]
 
 export class SceneUI extends Phaser.Scene
@@ -58,22 +36,22 @@ export class SceneUI extends Phaser.Scene
     }
     
     create() {
-        this.shader = this.add.shader('redwaves', config.width / 2, (UIHeight - 10) / 2, config.width, UIHeight - 10);
-        this.background = this.add.image(config.width / 2, UIHeight / 2, 'backgroundui');
-        this.background.setDisplaySize(config.width, UIHeight);
-        this.line = this.add.rectangle(config.width / 2, UIHeight - 5, config.width, 10, 0x000000);
+        this.shader = this.add.shader('redwaves', fwidth / 2, (UIHeight - 10) / 2, fwidth, UIHeight - 10);
+        this.background = this.add.image(fwidth / 2, UIHeight / 2, 'backgroundui');
+        this.background.setDisplaySize(fwidth, UIHeight);
+        this.line = this.add.rectangle(fwidth / 2, UIHeight - 5, baseX, 10, 0x000000).setScale(scaleX, 1);
         this.generateButtons();
     }
 
     generateButtons() {
-        let width = config.width / buttons.length;
+        let width = fwidth / buttondata.length;
         let height = UIHeight / 2;
         let i = 0;
-        for (let button of buttons) {
+        for (let button of buttondata) {
             let img = this.add.image(width * (i + 0.5), height, 'button').setScale(scaleX, 1);
             let imgover = this.add.image(width * (i + 0.5), height, 'buttonover').setScale(scaleX, 1);
             let text = this.add.text(img.x, img.y, button.str, style32).setScale(scaleX, 1).setOrigin(0.5);
-            this.buttons.push(new Button(text, img, imgover, button.fn));
+            this.buttons.push(new Button(text, img, imgover, button.fn, button.fnparam));
             ++i;
         }
     }
@@ -95,7 +73,10 @@ export class SceneUI extends Phaser.Scene
     }
 
     rescale() {
-        rescaleobject(this.shader, scaleX, 1, false, false, true);
+        if (this.shader) {
+            this.shader.destroy();
+            this.shader = this.add.shader('redwaves', fwidth / 2, (UIHeight - 10) / 2, fwidth, UIHeight - 10);
+        }
         rescaleobject(this.background, scaleX, 1, false, false, true);
         rescaleobject(this.line, scaleX, 1, false, false, true);
         for (let button of this.buttons)

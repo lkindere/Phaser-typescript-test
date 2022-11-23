@@ -1,10 +1,6 @@
 import 'phaser';
-import { getOption, game, config, Pheight, Pspeed } from '../config.js';
-import { UIHeight, UIlessScaleY, scaleX } from '../scale.js';
-
-function placeholder() {
-    console.log("lol");
-}
+import { getOption } from '../options.js';
+import { fwidth, fheight, Pspeed, UIHeight, UIlessScaleY, scaleX, scaleY, baseX, baseY } from '../scale.js';
 
 class Paddle
 {
@@ -45,22 +41,21 @@ export class SceneGame extends Phaser.Scene
     
     create() {
         if (getOption('Game shader') == true)
-            this.shader = this.add.shader('liquidvoid', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
-        this.background = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'gamebg');
-        this.background.setScale(Math.min(UIlessScaleY, scaleX));
+            this.shader = this.add.shader('liquidvoid', fwidth / 2, fheight / 2 + UIHeight / 2, fwidth, fheight - UIHeight)
+        this.background = this.add.image(fwidth / 2, fheight / 2 + UIHeight / 2, 'gamebg').setScale(Math.min(UIlessScaleY, scaleX));
         this.generateObjects();
     }
 
     generateObjects() {
         let leftX = this.background.x - this.background.displayWidth / 2.2;
         let rightX = this.background.x + this.background.displayWidth / 2.2;
-        this.Lpaddle = new Paddle(this.add.image(leftX, config.height / 2 + UIHeight / 2, 'paddle').setScale(Math.min(UIlessScaleY, scaleX)));
-        this.Rpaddle = new Paddle(this.add.image(rightX, config.height / 2 + UIHeight / 2, 'paddle').setScale(Math.min(UIlessScaleY, scaleX)));
-        this.timer = game.getTime();
+        this.Lpaddle = new Paddle(this.add.image(leftX, fheight / 2 + UIHeight / 2, 'paddle').setScale(Math.min(UIlessScaleY, scaleX)));
+        this.Rpaddle = new Paddle(this.add.image(rightX, fheight / 2 + UIHeight / 2, 'paddle').setScale(Math.min(UIlessScaleY, scaleX)));
+        this.timer = this.game.getTime();
     }
 
     update() {
-        let elapsed = game.getTime() - this.timer;
+        let elapsed = this.game.getTime() - this.timer;
         let multiplier = elapsed / 1000 * 60;
         var W = this.input.keyboard.addKey('W');
         var S = this.input.keyboard.addKey('S');
@@ -70,7 +65,7 @@ export class SceneGame extends Phaser.Scene
             this.Lpaddle.y += Pspeed * UIlessScaleY * multiplier;
         //Placeholder
         this.Rpaddle.y += Pspeed * UIlessScaleY * multiplier * server_says_lol_this_guy_moved();
-        this.timer = game.getTime();
+        this.timer = this.game.getTime();
     }
 
     clear() {

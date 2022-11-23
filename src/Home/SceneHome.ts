@@ -1,6 +1,6 @@
 import 'phaser';
-import { getOption, config, } from '../config.js';
-import { rescaleobject, UIHeight, scaleX, UIlessScaleY } from '../scale.js';
+import { getOption } from '../options.js';
+import { fwidth, fheight, rescaleobject, UIHeight, scaleX, scaleY, UIlessScaleY, baseX, baseY } from '../scale.js';
 
 export class SceneHome extends Phaser.Scene
 {
@@ -16,13 +16,12 @@ export class SceneHome extends Phaser.Scene
     
     create() {
         if (getOption('Home shader') == true) {
-            console.log("Creating shader");
-            this.shader = this.add.shader('acid', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
-            this.background = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'pongtransparent');
+            this.shader = this.add.shader('acid', fwidth / 2, fheight / 2 + UIHeight / 2, fwidth, fheight - UIHeight)
+            this.background = this.add.image(fwidth / 2, fheight / 2 + UIHeight / 2, 'pongtransparent').setDepth(1);
         }
         else 
-            this.background = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'pong');
-        this.background.setDisplaySize(config.width, config.height - UIHeight);
+            this.background = this.add.image(fwidth / 2, fheight / 2 + UIHeight / 2, 'pong');
+        this.background.setDisplaySize(fwidth, fheight - UIHeight);
         this.background.setDepth(1);
     }
     
@@ -34,8 +33,10 @@ export class SceneHome extends Phaser.Scene
     }
     
     rescale() {
-        rescaleobject(this.shader, scaleX, UIlessScaleY, true);
+        if (this.shader) {
+            this.shader.destroy();
+            this.shader = this.add.shader('acid', fwidth / 2, fheight / 2 + UIHeight / 2, fwidth, fheight - UIHeight);
+        }
         rescaleobject(this.background, scaleX, UIlessScaleY, true);
     }
-
 }
