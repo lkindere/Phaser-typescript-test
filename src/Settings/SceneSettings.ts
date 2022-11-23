@@ -1,9 +1,9 @@
 import 'phaser';
-import { options, config, scaleX, scaleY, UIHeight } from '../config.js';
+import { style, getOption, options, config } from '../config.js';
+import { scaleX, UIlessScaleY, UIHeight, rescaleobject } from '../scale.js';
 
 class OptionBox
 {
-    private isclick: boolean = false;
     private text: Phaser.GameObjects.Text;
     constructor (
         private option: { str: string, on: boolean },
@@ -11,58 +11,84 @@ class OptionBox
         private box: Phaser.GameObjects.Image,
         private tick: Phaser.GameObjects.Image
     ) {
-        var style = { font: "bold 32px Arial", fill: "#fff", bottom: 20};
-        this.text = scene.add.text(box.x, box.y, option.str, style);
-        this.text.setY(this.box.y - (this.text.getCenter().y - this.text.getTopLeft().y));
-        this.text.setX(this.box.x - this.box.width - (this.text.getRightCenter().x - this.text.getLeftCenter().x) - 10);
+        this.text = scene.add.text(box.x - (box.displayWidth / 2 + 5), box.y, option.str, style).setScale(scaleX, UIlessScaleY).setOrigin(1, 0.5);
+        (this.option.on == true) ? this.tick.visible = true : this.tick.visible = false;
     }
 
     loop(pointer: Phaser.Input.Pointer) {
+        if (pointer.x <= this.box.x + this.box.width / 2 && pointer.x >= this.box.x - this.box.width / 2
+            && pointer.y <= this.box.y + this.box.height / 2 && pointer.y >= this.box.y - this.box.height / 2)
+                this.option.on = !this.option.on;
         (this.option.on == true) ? this.tick.visible = true : this.tick.visible = false;
-        if (pointer.isDown == true && this.isclick == false)
-            if (pointer.x <= this.box.x + this.box.width / 2 && pointer.x >= this.box.x - this.box.width / 2
-                && pointer.y <= this.box.y + this.box.height / 2 && pointer.y >= this.box.y - this.box.height / 2) {
-                if (pointer.isDown == true && this.isclick == false){
-                    this.option.on = !this.option.on;
-                    this.isclick = true;
-                }
-            }
-        if (pointer.isDown == false)
-            this.isclick = false;
+    }
+    
+    rescale() {
+        rescaleobject(this.box, scaleX, UIlessScaleY, true);
+        rescaleobject(this.tick, scaleX, UIlessScaleY, true);
+        rescaleobject(this.text, scaleX, UIlessScaleY, true);
     }
 }
 
 export class SceneSettings extends Phaser.Scene
 {
+    clickreset: boolean;
     boxes: OptionBox[] = [];
-    wfourth: number = config.width / 4;
-    htenth: number = config.height / 10;
+    shader: Phaser.GameObjects.Shader | undefined;
+    background: Phaser.GameObjects.Image | undefined;
     constructor() {
         super({key: 'SceneSettings'});
     }
     
     preload() {
-        this.load.glsl('lava', 'assets/shaders/lava.frag');
-        this.load.image('box', 'assets/box.png');
-        this.load.image('tick', 'assets/tick.png');
+        this.events.on('shutdown', this.clear, this);
     }
     
     create() {
-        this.add.shader('lava', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
+        this.shader = this.add.shader('lava', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
+        let wfourth = config.width / 4;
+        let htenth =  (config.height - UIHeight) / 10;
         let i = 0;
         for (let option of options) {
-            let box = this.add.image(this.wfourth * (i % 3 + 1), UIHeight / 2 + this.htenth * (Math.floor(i / 3) + 1), 'box');
-            let tick = this.add.image(this.wfourth * (i % 3 + 1), UIHeight / 2 + this.htenth * (Math.floor(i / 3) + 1), 'tick');
-            box.setScale(scaleX, scaleY);
-            tick.setScale(scaleX, scaleY);
+            let box = this.add.image(wfourth * (i % 3 + 1), UIHeight + htenth * (Math.floor(i / 3) + 1), 'box');
+            let tick = this.add.image(wfourth * (i % 3 + 1), UIHeight + htenth * (Math.floor(i / 3) + 1), 'tick');
+            box.setDepth(1);
+            tick.setDepth(1);
+            box.setScale(scaleX, UIlessScaleY);
+            tick.setScale(scaleX, UIlessScaleY);
             this.boxes.push(new OptionBox(option, this, box, tick));
             ++i;
         }
+        let shaderactive = getOption('Settings shader');
+        this.shader?.setActive(shaderactive).setVisible(shaderactive);
+        this.background?.setActive(!shaderactive).setVisible(!shaderactive);
     }
 
     update() {
         let pointer = this.input.activePointer;
-        for (let box of this.boxes)
-            box.loop(pointer);
+        if (pointer.isDown == true && this.clickreset == true) {
+            this.clickreset = false;
+            for (let box of this.boxes)
+                box.loop(pointer);
+            let shaderactive = getOption('Settings shader');
+            this.shader?.setActive(shaderactive).setVisible(shaderactive);
+            this.background?.setActive(!shaderactive).setVisible(!shaderactive);
+        }
+        if (pointer.isDown == false)
+            this.clickreset = true;
+    }
+
+    clear() {
+        this.clickreset = false;
+        this.boxes = [];
+        this.shader = undefined;
+        this.background = undefined;
+    }
+
+    rescale () {
+        rescaleobject(this.shader, scaleX, UIlessScaleY, true);
+        rescaleobject(this.background, scaleX, UIlessScaleY, true);
+        for (let box of this.boxes) {
+            box.rescale();
+        }
     }
 }

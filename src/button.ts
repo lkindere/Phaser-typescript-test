@@ -1,36 +1,24 @@
 import 'phaser';
+import { rescaleobject, scaleX } from './scale.js';
 
-/**
- * Phaser doesn't support on click behavior, isclick is required for getting only a single click out of isdown
- * crnt holds the last created phaser image and uses it's width/height for dimension checking
- */
 export class Button
 {
-    private crnt: Phaser.GameObjects.Image | undefined;
-    private isover: boolean = false;
-    private isclick: boolean = false;
+    private isover = false;
+    private isclick = false;
     constructor(
-        private scene: Phaser.Scene,
-        private x: number,
-        private y: number,
-        private image: string,
-        private imageover: string,
-        private text: string,
+        private text: Phaser.GameObjects.Text,
+        private button: Phaser.GameObjects.Image,
+        private buttonover: Phaser.GameObjects.Image | undefined,
         private onclick: () => any,
-    ) {}
+    ) {
+        this.buttonover?.setActive(false).setVisible(false);
+    }
 
     private display() {
-        if (this.crnt)
-            this.crnt.destroy();
-        if (this.isover)
-            this.crnt = this.scene.add.image(this.x, this.y, this.imageover);
-        else
-            this.crnt = this.scene.add.image(this.x, this.y, this.image);
-        var style = { font: "bold 32px Arial", fill: "#fff", bottom: 20};
-        var text = this.scene.add.text(this.x, this.y, this.text, style);
-        text.setX(this.x - (text.getCenter().x - text.getTopLeft().x));
-        text.setY(this.y - (text.getCenter().y - text.getTopLeft().y));
+        this.button.setActive(!this.isover).setVisible(!this.isover);
+        this.buttonover?.setActive(this.isover).setVisible(this.isover);
     }
+
     private reset(pointer: Phaser.Input.Pointer) {
         this.isover = false;
         if (pointer.isDown == false)
@@ -38,17 +26,21 @@ export class Button
     }
     
     loop(pointer: Phaser.Input.Pointer) {
-        if (this.crnt) {
-            if (pointer.x <= this.x + this.crnt.width / 2 && pointer.x >= this.x - this.crnt.width / 2
-                && pointer.y <= this.y + this.crnt.height / 2 && pointer.y >= this.y - this.crnt.height / 2) {
-                this.isover = true;
-                if (pointer.isDown == true && this.isclick == false){
-                    this.isclick = true;
-                    this.onclick();
-                }
+        if (pointer.x <= this.button.x + this.button.displayWidth / 2 && pointer.x >= this.button.x - this.button.displayWidth / 2
+            && pointer.y <= this.button.y + this.button.displayHeight / 2 && pointer.y >= this.button.y - this.button.displayHeight / 2) {
+            this.isover = true;
+            if (pointer.isDown == true && this.isclick == false){
+                this.isclick = true;
+                this.onclick();
             }
         }
         this.display();
         this.reset(pointer);
+    }
+
+    rescale () {
+        rescaleobject(this.button, scaleX, 1, false, false, true);
+        rescaleobject(this.buttonover, scaleX, 1, false, false, true);
+        rescaleobject(this.text, scaleX, 1, false, false, true);
     }
 }

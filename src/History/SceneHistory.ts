@@ -1,6 +1,6 @@
 import 'phaser';
-// import { Button } from '../button.js';
-import { game, config, UIHeight, scaleX } from '../config.js';
+import { style32, getOption, config} from '../config.js';
+import { rescaleobject, UIHeight, scaleX, UIlessScaleY } from '../scale.js';
 
 let nmatches = 10;
 let scrolloffset = 0;
@@ -28,27 +28,28 @@ class HistoryBar
         private image: Phaser.GameObjects.Image
     ) {
         this.initialY = image.y;
-        var style = { font: "bold 32px Arial", fill: "#fff", bottom: 20};
-        //Create text + get vertical align
-        this.textmid = scene.add.text(image.x, image.y, ' : ', style);
-        var imagevertical = this.image.y * this.image.scaleY - (this.textmid.getCenter().y - this.textmid.getTopLeft().y);
-        this.textp1 = scene.add.text(image.x, imagevertical, data.p1 + ' ' + data.p1score, style);
-        this.textp2 = scene.add.text(image.x, imagevertical, data.p2score + ' ' + data.p2, style);
-        this.textmid.setY(imagevertical);
-        //Center horizontally
-        var imagethird = this.image.x * this.image.scaleX / 3;
-        this.textmid.setX(imagethird * 1.5 - (this.textmid.getCenter().x - this.textmid.getTopLeft().x));
-        this.textp1.setX(imagethird * 0.5 - (this.textp1.getCenter().x - this.textp1.getTopLeft().x));
-        this.textp2.setX(imagethird * 2.5 - (this.textp2.getCenter().x - this.textp2.getTopLeft().x));
+
+        this.textmid = scene.add.text(image.x, image.y, ' : ', style32).setScale(scaleX, UIlessScaleY).setOrigin(0.5);
+        this.textp1 = scene.add.text(image.x, image.y, data.p1 + ' ' + data.p1score, style32).setScale(scaleX, UIlessScaleY).setOrigin(0.5);
+        this.textp2 = scene.add.text(image.x, image.y, data.p2score + ' ' + data.p2, style32).setScale(scaleX, UIlessScaleY).setOrigin(0.5);
+
+        var imagethird = this.image.displayWidth / 3;
+        this.textp1.setX(this.image.getLeftCenter().x + imagethird * 0.5).setDepth(10);
+        this.textmid.setX(this.image.getLeftCenter().x + imagethird * 1.5).setDepth(10);
+        this.textp2.setX(this.image.getLeftCenter().x + imagethird * 2.5).setDepth(10);
     }
 
     loop() {
-        //Reposition on scroll
-        this.image.setY(this.initialY - scrolloffset);
-        var imagevertical = this.image.y * this.image.scaleY - (this.textmid.getCenter().y - this.textmid.getTopLeft().y);
-        this.textp1.setY(imagevertical);
-        this.textp2.setY(imagevertical);
-        this.textmid.setY(imagevertical);
+        this.textp1.setY(this.image.y);
+        this.textp2.setY(this.image.y);
+        this.textmid.setY(this.image.y);
+    }
+
+    rescale() {
+        rescaleobject(this.image, scaleX - 0.05, UIlessScaleY - 0.15, true);
+        rescaleobject(this.textmid, scaleX, UIlessScaleY, true);
+        rescaleobject(this.textp1, scaleX, UIlessScaleY, true);
+        rescaleobject(this.textp2, scaleX, UIlessScaleY, true);
     }
 }
 
@@ -56,25 +57,24 @@ export class SceneHistory extends Phaser.Scene
 {
     reposition: boolean = false;
     matches: HistoryBar[] = [];
+    shader: Phaser.GameObjects.Shader | undefined;
     constructor() {
         super({key: 'SceneHistory'});
     }
 
     preload() {
-        var bar = this.load.image('bar', 'assets/bigbar.png');
-        this.load.glsl('waves', 'assets/shaders/waves.frag');
+        this.events.on('shutdown', this.clear, this);
     }
     
     create() {
-        this.add.shader('waves', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
+        if (getOption('History shader') == true)
+            this.shader = this.add.shader('waves', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
         //Placeholder until actual data can be acquired
+        let hfifth = (config.height - UIHeight) / 5;
         for (let i = 0; i < nmatches; ++i) {
-            var matchdata = new MatchData('bob', 'peter', 5, 10);
-            var img = this.add.image(config.width / 2, config.height / 2 - UIHeight / 2, 'bar');
-            img.setScale(scaleX - 0.05, 1);
-            img.setY(UIHeight + img.height / 2 + img.height * 1.1 * (i + 0.1));
-            var bar = new HistoryBar(this, matchdata, img);
-            this.matches.push(bar);
+            var matchdata = new MatchData('some dude', 'another dude', 5, 10);
+            var img = this.add.image(config.width / 2, UIHeight + hfifth * i, 'bar').setScale(scaleX - 0.05, UIlessScaleY - 0.15);
+            this.matches.push(new HistoryBar(this, matchdata, img));
         }
     }
 
@@ -94,5 +94,17 @@ export class SceneHistory extends Phaser.Scene
         if (scrolloffset < 0)
             scrolloffset = 0;
         this.reposition = true;
+    }
+
+    clear() {
+        this.reposition = false;
+        this.matches = [];
+        scrolloffset = 0;
+    }
+
+    rescale() {
+        rescaleobject(this.shader, scaleX, UIlessScaleY, true);
+        for (let match of this.matches)
+            match.rescale();
     }
 }

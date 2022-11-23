@@ -1,6 +1,6 @@
 import 'phaser';
-import { Button } from '../button.js';
-import { game, config, UIHeight, UIlessScaleY, Pspeed } from '../config.js';
+import { getOption, game, config, Pheight, Pspeed } from '../config.js';
+import { UIHeight, UIlessScaleY, scaleX } from '../scale.js';
 
 function placeholder() {
     console.log("lol");
@@ -15,7 +15,6 @@ class Paddle
     set y(_y: number) {
         this.image.y = _y;
     }
-
     get y() {
         return this.image.y;
     }
@@ -32,29 +31,31 @@ function server_says_lol_this_guy_moved(): number {
 export class SceneGame extends Phaser.Scene
 {
     timer: number;
-    play: Button;
     Lpaddle: Paddle;
     Rpaddle: Paddle;
+    shader: Phaser.GameObjects.Shader | undefined;
+    background: Phaser.GameObjects.Image;
     constructor() {
         super({key: 'SceneGame'});
-        this.play = new Button(this, config.width / 4 * 0.5, UIHeight / 2, 'button', 'buttonover', 'Play', placeholder);
     }
 
     preload() {
-        this.load.image('paddle', 'assets/paddle.png');
-        this.load.image('gamebg', 'assets/gamebackground.png');
-        this.load.glsl('liquidvoid', 'assets/shaders/liquidvoid.frag');
+        this.events.on('shutdown', this.clear, this);
     }
     
     create() {
-        this.add.shader('liquidvoid', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
-        let gamebg = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'gamebg');
-        gamebg.setScale(UIlessScaleY, UIlessScaleY);
-        let scaledwidth = gamebg.width * gamebg.scale;
-        let leftX = gamebg.x - scaledwidth / 2.2;
-        let rightX = gamebg.x + scaledwidth / 2.2;
-        this.Lpaddle = new Paddle(this.add.image(leftX, config.height / 2 + UIHeight / 2, 'paddle'));
-        this.Rpaddle = new Paddle(this.add.image(rightX, config.height / 2 + UIHeight / 2, 'paddle'));
+        if (getOption('Game shader') == true)
+            this.shader = this.add.shader('liquidvoid', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
+        this.background = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'gamebg');
+        this.background.setScale(Math.min(UIlessScaleY, scaleX));
+        this.generateObjects();
+    }
+
+    generateObjects() {
+        let leftX = this.background.x - this.background.displayWidth / 2.2;
+        let rightX = this.background.x + this.background.displayWidth / 2.2;
+        this.Lpaddle = new Paddle(this.add.image(leftX, config.height / 2 + UIHeight / 2, 'paddle').setScale(Math.min(UIlessScaleY, scaleX)));
+        this.Rpaddle = new Paddle(this.add.image(rightX, config.height / 2 + UIHeight / 2, 'paddle').setScale(Math.min(UIlessScaleY, scaleX)));
         this.timer = game.getTime();
     }
 
@@ -64,11 +65,19 @@ export class SceneGame extends Phaser.Scene
         var W = this.input.keyboard.addKey('W');
         var S = this.input.keyboard.addKey('S');
         if (W.isDown && !S.isDown)
-            this.Lpaddle.y -= Pspeed * multiplier;
+            this.Lpaddle.y -= Pspeed * UIlessScaleY * multiplier;
         else if (S.isDown && ! W.isDown)
-            this.Lpaddle.y += Pspeed * multiplier;
+            this.Lpaddle.y += Pspeed * UIlessScaleY * multiplier;
         //Placeholder
-        this.Rpaddle.y += Pspeed * multiplier * server_says_lol_this_guy_moved();
+        this.Rpaddle.y += Pspeed * UIlessScaleY * multiplier * server_says_lol_this_guy_moved();
         this.timer = game.getTime();
+    }
+
+    clear() {
+        this.timer = 0;
+        this.Lpaddle = undefined;
+        this.Rpaddle = undefined;
+        this.shader = undefined;
+        this.background = undefined;
     }
 }

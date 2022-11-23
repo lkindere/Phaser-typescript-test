@@ -1,26 +1,41 @@
 import 'phaser';
-import { config, UIHeight, scaleX, UIlessScaleY } from '../config.js';
+import { getOption, config, } from '../config.js';
+import { rescaleobject, UIHeight, scaleX, UIlessScaleY } from '../scale.js';
 
 export class SceneHome extends Phaser.Scene
 {
+    shader: Phaser.GameObjects.Shader | undefined = undefined;
+    background: Phaser.GameObjects.Image | undefined = undefined;
     constructor() {
-        super({key: 'SceneHome', active: true});
+        super({key: 'SceneHome'});
     }
 
     preload() {
-        this.load.image('pong', 'assets/pong.png');
-        this.load.image('pongtransparent', 'assets/pongtransparent.png');
-        this.load.glsl('acid', 'assets/shaders/acid.frag');
+        this.events.on('shutdown', this.clear, this);
     }
     
     create() {
-        // let bg = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'pong');
-        // bg.setScale(scaleX, UIlessScaleY);
-        var shader = this.add.shader('acid', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
-        let bg = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'pongtransparent');
-        bg.setScale(scaleX, UIlessScaleY);
+        if (getOption('Home shader') == true) {
+            console.log("Creating shader");
+            this.shader = this.add.shader('acid', config.width / 2, config.height / 2 + UIHeight / 2, config.width, config.height - UIHeight);
+            this.background = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'pongtransparent');
+        }
+        else 
+            this.background = this.add.image(config.width / 2, config.height / 2 + UIHeight / 2, 'pong');
+        this.background.setDisplaySize(config.width, config.height - UIHeight);
+        this.background.setDepth(1);
+    }
+    
+    update() {}
+
+    clear() {
+        this.shader = undefined;
+        this.background = undefined;
+    }
+    
+    rescale() {
+        rescaleobject(this.shader, scaleX, UIlessScaleY, true);
+        rescaleobject(this.background, scaleX, UIlessScaleY, true);
     }
 
-    update() {
-    }
 }
